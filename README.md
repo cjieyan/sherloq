@@ -278,8 +278,11 @@ $ sudo apt install -y xvfb
 $ xvfb-run python sherloq.py
 ```
 
-*CentOS / RHEL / Fedora* — Xvfb was **removed in RHEL/CentOS 10**. Use a headless Weston compositor with Xwayland instead:
+*CentOS / RHEL / Fedora* — Xvfb was **removed in RHEL/CentOS 10**. Use a headless Weston compositor with Xwayland instead.
+
+First enable the **CRB** (CodeReady Linux Builder) repository which provides libraries Weston depends on, then install:
 ```console
+$ sudo dnf config-manager --set-enabled crb
 $ sudo dnf install -y weston xorg-x11-server-Xwayland
 $ weston --backend=headless-backend.so --socket=headless --no-config &
 $ sleep 1
@@ -287,6 +290,8 @@ $ WAYLAND_DISPLAY=headless Xwayland :10 -noreset &
 $ sleep 1
 $ DISPLAY=:10 python sherloq.py
 ```
+
+> **Note:** If the Weston install still fails with unresolved EPEL dependencies (e.g. `libturbojpeg.so.0`), the EPEL package has an ABI mismatch with the CentOS 10 system libraries. In that case **Option B (SSH X11 forwarding) below is the most reliable workaround** — it requires no extra packages on the server.
 
 **Option B — SSH X11 forwarding (display on your local machine)**
 
