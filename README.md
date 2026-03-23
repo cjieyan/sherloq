@@ -256,9 +256,44 @@ $ pip install -r requirements.txt --no-build-isolation
 > **Note (Python 3.12+ / setuptools 82+):** `setuptools 82.0.0` removed the `pkg_resources` module. When pip builds a package from source it creates a temporary **isolated** environment and installs the latest setuptools there — so pinning setuptools in the virtualenv alone is not enough. The `--no-build-isolation` flag tells pip to reuse the virtualenv's own packages (including the pinned `setuptools<82`) for all build steps, which keeps `pkg_resources` available and prevents the `ModuleNotFoundError`.
 
 ## [4/4] Launch program
+
+### Desktop environment (local machine)
 ```console
 python sherloq.py
 ```
+
+### Headless server (no physical display)
+
+If you see the error below, there is no X11 display available — this is common on remote servers accessed via SSH without X forwarding:
+```
+qt.qpa.xcb: could not connect to display
+qt.qpa.plugin: Could not load the Qt platform plugin "xcb"
+```
+
+**Option A — Virtual display with Xvfb (recommended for servers)**
+
+Install the virtual framebuffer X server, then wrap the launch command with `xvfb-run`:
+
+*Ubuntu / Debian:*
+```console
+$ sudo apt install -y xvfb
+$ xvfb-run python sherloq.py
+```
+
+*CentOS / RHEL / Fedora:*
+```console
+$ sudo dnf install -y xorg-x11-server-Xvfb
+$ xvfb-run python sherloq.py
+```
+
+**Option B — SSH X11 forwarding (display on your local machine)**
+
+Connect to the server with X forwarding enabled, then run normally:
+```console
+$ ssh -X user@your-server
+$ cd sherloq/gui && workon sq && python sherloq.py
+```
+On macOS you need [XQuartz](https://www.xquartz.org/) installed locally. On Windows use [VcXsrv](https://sourceforge.net/projects/vcxsrv/) or [MobaXterm](https://mobaxterm.mobatek.net/).
 
 # Updates
 When a new version is released, update the local working copy using Git, SVN or manually downloading from this repository and (if necessary) update the packages in the virtual environment following [this guide](https://www.activestate.com/resources/quick-reads/how-to-update-all-python-packages/).
