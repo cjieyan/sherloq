@@ -170,18 +170,18 @@ C:\> .venv\Scripts\activate.bat
 
 #### Linux
 ```console
-$ sudo apt install python3-distutils python3-dev python3-testresources subversion
-$ wget https://bootstrap.pypa.io/get-pip.py
-$ sudo python3 get-pip.py
-$ rm get-pip.py
-$ sudo pip install virtualenv virtualenvwrapper
+$ sudo apt install python3-dev python3-pip subversion
+$ pip install --user virtualenv virtualenvwrapper
 $ echo -e "\n# Python Virtual Environments" >> ~/.bashrc
 $ echo "export WORKON_HOME=$HOME/.virtualenvs" >> ~/.bashrc
 $ echo "export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3" >> ~/.bashrc
-$ echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
+$ echo "source ~/.local/bin/virtualenvwrapper.sh" >> ~/.bashrc
 $ source ~/.bashrc
 $ mkvirtualenv sq -p python3
 ```
+
+> **Note (Python 3.12+):** `python3-distutils` was removed from the standard library in Python 3.12 and is no longer available as an APT package. The `pip install --user` approach shown above avoids the PEP 668 "externally-managed-environment" restriction present on Ubuntu 24.04+ and installs `virtualenvwrapper.sh` to `~/.local/bin/`. If you previously used `sudo pip install` and the script was placed in `/usr/local/bin/`, update the `source` line in `~/.bashrc` accordingly.
+
 #### Windows
 1. Download *Python 3.11* setup package from [official site](https://www.python.org/downloads/)
 2. Install ensuring that "Add Python to PATH" and "PIP installation" are enabled
