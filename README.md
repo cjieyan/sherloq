@@ -220,13 +220,10 @@ $ mkvirtualenv sq -p python3
 ```console
 cd gui
 pip install --upgrade pip "setuptools<82" wheel
-pip install -r requirements.txt
+pip install -r requirements.txt --no-build-isolation
 ```
 
-> **Note (Python 3.12+ / setuptools 82+):** `setuptools 82.0.0` removed the `pkg_resources` module that legacy `setup.py` files depend on. Running `pip install "setuptools<82"` first ensures the virtualenv contains a compatible setuptools. If you still encounter `ModuleNotFoundError: No module named 'pkg_resources'` for any package, add `--no-build-isolation` to the install command so the build process uses the virtualenv's setuptools instead of an isolated environment:
-> ```
-> pip install -r requirements.txt --no-build-isolation
-> ```
+> **Note (Python 3.12+ / setuptools 82+):** `setuptools 82.0.0` removed the `pkg_resources` module. When pip builds a package from source it creates a temporary **isolated** environment and installs the latest setuptools there — so pinning setuptools in the virtualenv alone is not enough. The `--no-build-isolation` flag tells pip to reuse the virtualenv's own packages (including the pinned `setuptools<82`) for all build steps, which keeps `pkg_resources` available and prevents the `ModuleNotFoundError`.
 
 ## [4/4] Launch program
 ```console
