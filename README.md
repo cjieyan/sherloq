@@ -224,7 +224,8 @@ PySide6's Qt WebEngine and XCB platform plugin require several system-level shar
 #### Ubuntu / Debian
 ```console
 $ sudo apt install -y \
-    libatomic1 libegl1 libgl1 \
+    libatomic1 libegl1 libgl1 libtiff5 \
+    libasound2 libnss3 libnspr4 \
     libxcomposite1 libxdamage1 libxrandr2 libxfixes3 libxcursor1 libxrender1 libxi6 libxtst6 \
     libxkbcommon-x11-0 \
     libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xkb1
@@ -233,7 +234,8 @@ $ sudo apt install -y \
 #### CentOS / RHEL / Fedora
 ```console
 $ sudo dnf install --setopt=skip_if_unavailable=True -y \
-    libatomic mesa-libEGL mesa-libGL \
+    libatomic mesa-libEGL mesa-libGL libtiff \
+    alsa-lib nss nspr \
     libXcomposite libXdamage libXrandr libXfixes libXcursor libXrender libXi libXtst \
     libxkbcommon libxkbcommon-x11 \
     xcb-util-cursor xcb-util-wm xcb-util-image xcb-util-keysyms xcb-util-renderutil libxcb
