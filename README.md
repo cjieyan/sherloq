@@ -270,20 +270,22 @@ qt.qpa.xcb: could not connect to display
 qt.qpa.plugin: Could not load the Qt platform plugin "xcb"
 ```
 
-**Option A — Virtual display with Xvfb (recommended for servers)**
+**Option A — Virtual display (recommended for servers)**
 
-Install the virtual framebuffer X server, then wrap the launch command with `xvfb-run`:
-
-*Ubuntu / Debian:*
+*Ubuntu / Debian* — use Xvfb:
 ```console
 $ sudo apt install -y xvfb
 $ xvfb-run python sherloq.py
 ```
 
-*CentOS / RHEL / Fedora:*
+*CentOS / RHEL / Fedora* — Xvfb was **removed in RHEL/CentOS 10**. Use a headless Weston compositor with Xwayland instead:
 ```console
-$ sudo dnf install -y xorg-x11-server-Xvfb
-$ xvfb-run python sherloq.py
+$ sudo dnf install -y weston xorg-x11-server-Xwayland
+$ weston --backend=headless-backend.so --socket=headless --no-config &
+$ sleep 1
+$ WAYLAND_DISPLAY=headless Xwayland :10 -noreset &
+$ sleep 1
+$ DISPLAY=:10 python sherloq.py
 ```
 
 **Option B — SSH X11 forwarding (display on your local machine)**
