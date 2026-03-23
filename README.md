@@ -217,10 +217,34 @@ $ mkvirtualenv sq -p python3
 
 ## [3/4] Install dependencies
 
+### System libraries (Linux only)
+
+PySide6's Qt WebEngine and XCB platform plugin require several system-level shared libraries that are not installed by default on many distributions. Install them **before** running `pip install` to avoid `ImportError: libXxx.so cannot open shared object file` errors at runtime:
+
+#### Ubuntu / Debian
 ```console
-cd gui
-pip install --upgrade pip "setuptools<82" wheel
-pip install -r requirements.txt --no-build-isolation
+$ sudo apt install -y \
+    libatomic1 libegl1 libgl1 \
+    libxcomposite1 libxdamage1 libxrandr2 libxfixes3 libxcursor1 libxrender1 libxi6 libxtst6 \
+    libxkbcommon-x11-0 \
+    libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xkb1
+```
+
+#### CentOS / RHEL / Fedora
+```console
+$ sudo dnf install --setopt=skip_if_unavailable=True -y \
+    libatomic mesa-libEGL mesa-libGL \
+    libXcomposite libXdamage libXrandr libXfixes libXcursor libXrender libXi libXtst \
+    libxkbcommon libxkbcommon-x11 \
+    xcb-util-cursor xcb-util-wm xcb-util-image xcb-util-keysyms xcb-util-renderutil libxcb
+```
+
+### Python packages
+
+```console
+$ cd gui
+$ pip install --upgrade pip "setuptools<82" wheel
+$ pip install -r requirements.txt --no-build-isolation
 ```
 
 > **Note (Python 3.12+ / setuptools 82+):** `setuptools 82.0.0` removed the `pkg_resources` module. When pip builds a package from source it creates a temporary **isolated** environment and installs the latest setuptools there — so pinning setuptools in the virtualenv alone is not enough. The `--no-build-isolation` flag tells pip to reuse the virtualenv's own packages (including the pinned `setuptools<82`) for all build steps, which keeps `pkg_resources` available and prevents the `ModuleNotFoundError`.
@@ -229,26 +253,6 @@ pip install -r requirements.txt --no-build-isolation
 ```console
 python sherloq.py
 ```
-
-NOTE for Linux users: if this error is displayed:
-```
-qt.qpa.plugin: From 6.5.0, xcb-cursor0 or libxcb-cursor0 is needed to load the Qt xcb platform plugin.
-qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
-This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
-```
-Run this command from the terminal:
-- **Ubuntu / Debian:** `sudo apt install -y libxcb-cursor-dev`
-- **CentOS / RHEL / Fedora:** `sudo dnf install -y libxcb-cursor`
-
----
-
-NOTE for Linux users: if this error is displayed:
-```
-ImportError: libatomic.so.1: cannot open shared object file: No such file or directory
-```
-PySide6's WebEngine module requires the GCC atomic runtime library. Install it with:
-- **Ubuntu / Debian:** `sudo apt install -y libatomic1`
-- **CentOS / RHEL / Fedora:** `sudo dnf install -y libatomic`
 
 # Updates
 When a new version is released, update the local working copy using Git, SVN or manually downloading from this repository and (if necessary) update the packages in the virtual environment following [this guide](https://www.activestate.com/resources/quick-reads/how-to-update-all-python-packages/).
