@@ -168,7 +168,7 @@ C:\> .venv\Scripts\activate.bat
 
 ### [VirtualEnvWrapper](https://virtualenvwrapper.readthedocs.io/en/latest/)
 
-#### Linux
+#### Linux — Ubuntu / Debian
 ```console
 $ sudo apt install python3-dev python3-pip subversion
 $ pip install --user virtualenv virtualenvwrapper
@@ -180,7 +180,22 @@ $ source ~/.bashrc
 $ mkvirtualenv sq -p python3
 ```
 
-> **Note (Python 3.12+):** `python3-distutils` was removed from the standard library in Python 3.12 and is no longer available as an APT package. The `pip install --user` approach shown above avoids the PEP 668 "externally-managed-environment" restriction present on Ubuntu 24.04+ and installs `virtualenvwrapper.sh` to `~/.local/bin/`. If you previously used `sudo pip install` and the script was placed in `/usr/local/bin/`, update the `source` line in `~/.bashrc` accordingly.
+> **Note (Python 3.12+ / Ubuntu 24.04+):** `python3-distutils` was removed from the standard library in Python 3.12 and is no longer available as an APT package. The `pip install --user` approach shown above avoids the PEP 668 "externally-managed-environment" restriction and installs `virtualenvwrapper.sh` to `~/.local/bin/`.
+
+#### Linux — CentOS / RHEL / Fedora (including CentOS Stream 10)
+```console
+$ sudo dnf install python3-devel python3-pip subversion
+$ python3 -m pip install --user virtualenv virtualenvwrapper
+$ echo -e "\n# Python Virtual Environments" >> ~/.bashrc
+$ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+$ echo "export WORKON_HOME=$HOME/.virtualenvs" >> ~/.bashrc
+$ echo "export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3" >> ~/.bashrc
+$ echo "source ~/.local/bin/virtualenvwrapper.sh" >> ~/.bashrc
+$ source ~/.bashrc
+$ mkvirtualenv sq -p python3
+```
+
+> **Note (CentOS Stream 10 / Python 3.12+):** Use `python3-devel` instead of `python3-dev` and `dnf` instead of `apt`. `python3 -m pip install --user` is used to ensure the correct Python's pip is invoked. The `PATH` export line is required because CentOS/RHEL does not automatically add `~/.local/bin` to `$PATH` in non-login shells.
 
 #### Windows
 1. Download *Python 3.11* setup package from [official site](https://www.python.org/downloads/)
