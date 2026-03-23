@@ -168,20 +168,40 @@ C:\> .venv\Scripts\activate.bat
 
 ### [VirtualEnvWrapper](https://virtualenvwrapper.readthedocs.io/en/latest/)
 
-#### Linux
+#### Linux — Ubuntu / Debian
 ```console
-$ sudo apt install python3-distutils python3-dev python3-testresources subversion
-$ wget https://bootstrap.pypa.io/get-pip.py
-$ sudo python3 get-pip.py
-$ rm get-pip.py
-$ sudo pip install virtualenv virtualenvwrapper
+$ sudo apt install python3-dev python3-pip subversion
+$ pip install --user virtualenv virtualenvwrapper
 $ echo -e "\n# Python Virtual Environments" >> ~/.bashrc
 $ echo "export WORKON_HOME=$HOME/.virtualenvs" >> ~/.bashrc
 $ echo "export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3" >> ~/.bashrc
-$ echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
+$ echo "source ~/.local/bin/virtualenvwrapper.sh" >> ~/.bashrc
 $ source ~/.bashrc
 $ mkvirtualenv sq -p python3
 ```
+
+> **Note (Python 3.12+ / Ubuntu 24.04+):** `python3-distutils` was removed from the standard library in Python 3.12 and is no longer available as an APT package. The `pip install --user` approach shown above avoids the PEP 668 "externally-managed-environment" restriction and installs `virtualenvwrapper.sh` to `~/.local/bin/`.
+
+#### Linux — CentOS / RHEL / Fedora (including CentOS Stream 10)
+```console
+$ sudo dnf install --setopt=skip_if_unavailable=True python3-devel python3-pip subversion
+$ python3 -m pip install --user virtualenv virtualenvwrapper
+$ echo -e "\n# Python Virtual Environments" >> ~/.bashrc
+$ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+$ echo "export WORKON_HOME=$HOME/.virtualenvs" >> ~/.bashrc
+$ echo "export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3" >> ~/.bashrc
+$ echo "source ~/.local/bin/virtualenvwrapper.sh" >> ~/.bashrc
+$ source ~/.bashrc
+$ mkvirtualenv sq -p python3
+```
+
+> **Note (CentOS Stream 10 / Python 3.12+):** Use `python3-devel` instead of `python3-dev` and `dnf` instead of `apt`. `python3 -m pip install --user` is used to ensure the correct Python's pip is invoked. The `PATH` export line is required because CentOS/RHEL does not automatically add `~/.local/bin` to `$PATH` in non-login shells.
+>
+> **Note (third-party repos such as wlnmp):** If a third-party repository (e.g. `wlnmp`) has not yet published metadata for CentOS Stream 10, `dnf` will abort with a 404 error. The `--setopt=skip_if_unavailable=True` flag in the command above causes dnf to silently skip any repo whose metadata cannot be fetched. Alternatively, disable the offending repo explicitly before running the install command:
+> ```
+> $ sudo dnf config-manager --disable wlnmp
+> ```
+
 #### Windows
 1. Download *Python 3.11* setup package from [official site](https://www.python.org/downloads/)
 2. Install ensuring that "Add Python to PATH" and "PIP installation" are enabled
@@ -197,23 +217,90 @@ $ mkvirtualenv sq -p python3
 
 ## [3/4] Install dependencies
 
+### System libraries (Linux only)
+
+PySide6's Qt WebEngine and XCB platform plugin require several system-level shared libraries that are not installed by default on many distributions. Install them **before** running `pip install` to avoid `ImportError: libXxx.so cannot open shared object file` errors at runtime:
+
+#### Ubuntu / Debian
 ```console
-cd gui
-pip install -r requirements.txt
+$ sudo apt install -y \
+    libatomic1 libegl1 libgl1 libtiff5 \
+    libasound2 libnss3 libnspr4 \
+    libxkbfile1 libxext6 libxss1 \
+    libfontconfig1 libfreetype6 libexpat1 libdbus-1-3 \
+    libxcomposite1 libxdamage1 libxrandr2 libxfixes3 libxcursor1 libxrender1 libxi6 libxtst6 \
+    libxkbcommon-x11-0 \
+    libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xkb1
 ```
 
+#### CentOS / RHEL / Fedora
+```console
+$ sudo dnf install --setopt=skip_if_unavailable=True -y \
+    libatomic mesa-libEGL mesa-libGL libtiff \
+    alsa-lib nss nspr \
+    libxkbfile libXext libXScrnSaver \
+    fontconfig freetype expat dbus-libs \
+    libXcomposite libXdamage libXrandr libXfixes libXcursor libXrender libXi libXtst \
+    libxkbcommon libxkbcommon-x11 \
+    xcb-util-cursor xcb-util-wm xcb-util-image xcb-util-keysyms xcb-util-renderutil libxcb
+```
+
+### Python packages
+
+```console
+$ cd gui
+$ pip install --upgrade pip "setuptools<82" wheel
+$ pip install -r requirements.txt --no-build-isolation
+```
+
+> **Note (Python 3.12+ / setuptools 82+):** `setuptools 82.0.0` removed the `pkg_resources` module. When pip builds a package from source it creates a temporary **isolated** environment and installs the latest setuptools there — so pinning setuptools in the virtualenv alone is not enough. The `--no-build-isolation` flag tells pip to reuse the virtualenv's own packages (including the pinned `setuptools<82`) for all build steps, which keeps `pkg_resources` available and prevents the `ModuleNotFoundError`.
+
 ## [4/4] Launch program
+
+### Desktop environment (local machine)
 ```console
 python sherloq.py
 ```
 
-NOTE for Linux users: if this error is displayed:
+### Headless server (no physical display)
+
+If you see the error below, there is no X11 display available — this is common on remote servers accessed via SSH without X forwarding:
 ```
-qt.qpa.plugin: From 6.5.0, xcb-cursor0 or libxcb-cursor0 is needed to load the Qt xcb platform plugin.
-qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
-This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+qt.qpa.xcb: could not connect to display
+qt.qpa.plugin: Could not load the Qt platform plugin "xcb"
 ```
-Run this command from the terminal: `sudo apt install -y libxcb-cursor-dev` 
+
+**Option A — Virtual display (recommended for servers)**
+
+*Ubuntu / Debian* — use Xvfb:
+```console
+$ sudo apt install -y xvfb
+$ xvfb-run python sherloq.py
+```
+
+*CentOS / RHEL / Fedora* — Xvfb was **removed in RHEL/CentOS 10**. Use a headless Weston compositor with Xwayland instead.
+
+First enable the **CRB** (CodeReady Linux Builder) repository which provides libraries Weston depends on, then install:
+```console
+$ sudo dnf config-manager --set-enabled crb
+$ sudo dnf install -y weston xorg-x11-server-Xwayland
+$ weston --backend=headless-backend.so --socket=headless --no-config &
+$ sleep 1
+$ WAYLAND_DISPLAY=headless Xwayland :10 -noreset &
+$ sleep 1
+$ DISPLAY=:10 python sherloq.py
+```
+
+> **Note:** If the Weston install still fails with unresolved EPEL dependencies (e.g. `libturbojpeg.so.0`), the EPEL package has an ABI mismatch with the CentOS 10 system libraries. In that case **Option B (SSH X11 forwarding) below is the most reliable workaround** — it requires no extra packages on the server.
+
+**Option B — SSH X11 forwarding (display on your local machine)**
+
+Connect to the server with X forwarding enabled, then run normally:
+```console
+$ ssh -X user@your-server
+$ cd sherloq/gui && workon sq && python sherloq.py
+```
+On macOS you need [XQuartz](https://www.xquartz.org/) installed locally. On Windows use [VcXsrv](https://sourceforge.net/projects/vcxsrv/) or [MobaXterm](https://mobaxterm.mobatek.net/).
 
 # Updates
 When a new version is released, update the local working copy using Git, SVN or manually downloading from this repository and (if necessary) update the packages in the virtual environment following [this guide](https://www.activestate.com/resources/quick-reads/how-to-update-all-python-packages/).
