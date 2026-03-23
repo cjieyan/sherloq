@@ -184,7 +184,7 @@ $ mkvirtualenv sq -p python3
 
 #### Linux — CentOS / RHEL / Fedora (including CentOS Stream 10)
 ```console
-$ sudo dnf install python3-devel python3-pip subversion
+$ sudo dnf install --setopt=skip_if_unavailable=True python3-devel python3-pip subversion
 $ python3 -m pip install --user virtualenv virtualenvwrapper
 $ echo -e "\n# Python Virtual Environments" >> ~/.bashrc
 $ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
@@ -196,6 +196,11 @@ $ mkvirtualenv sq -p python3
 ```
 
 > **Note (CentOS Stream 10 / Python 3.12+):** Use `python3-devel` instead of `python3-dev` and `dnf` instead of `apt`. `python3 -m pip install --user` is used to ensure the correct Python's pip is invoked. The `PATH` export line is required because CentOS/RHEL does not automatically add `~/.local/bin` to `$PATH` in non-login shells.
+>
+> **Note (third-party repos such as wlnmp):** If a third-party repository (e.g. `wlnmp`) has not yet published metadata for CentOS Stream 10, `dnf` will abort with a 404 error. The `--setopt=skip_if_unavailable=True` flag in the command above causes dnf to silently skip any repo whose metadata cannot be fetched. Alternatively, disable the offending repo explicitly before running the install command:
+> ```
+> $ sudo dnf config-manager --disable wlnmp
+> ```
 
 #### Windows
 1. Download *Python 3.11* setup package from [official site](https://www.python.org/downloads/)
